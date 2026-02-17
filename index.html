@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 여행지 추천</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+        }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: var(--primary-color);
+        }
+        button {
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #result {
+            margin-top: 20px;
+            display: none; /* 결과가 있을 때만 보임 */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .dest-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .dest-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .dest-desc {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✈️ MBTI 여행지 추천</h1>
+    <div class="input-group">
+        <input type="text" id="mbtiInput" placeholder="예: ENFP" maxlength="4">
+        <button onclick="recommendTravel()">추천받기</button>
+    </div>
+    
+    <div id="result">
+        <img id="destImage" class="dest-img" src="" alt="여행지 이미지">
+        <div id="destName" class="dest-name"></div>
+        <div id="destDesc" class="dest-desc"></div>
+    </div>
+</div>
+
+<script>
+    // MBTI 데이터베이스 (16가지 유형)
+    const mbtiData = {
+        'ISTJ': { city: '독일 베를린', desc: '철저한 계획과 질서를 좋아하는 당신에게 완벽한 역사와 규율의 도시.', img: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=800&q=80' },
+        'ISFJ': { city: '일본 교토', desc: '조용하고 평화로운 분위기에서 전통을 느낄 수 있는 힐링 여행지.', img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80' },
+        'INFJ': { city: '아이슬란드', desc: '신비롭고 조용한 오로라의 나라. 깊은 사색을 즐기는 당신에게 추천.', img: 'https://images.unsplash.com/photo-1476610182048-b716b8518aae?auto=format&fit=crop&w=800&q=80' },
+        'INTJ': { city: '영국 런던', desc: '지적 호기심을 자극하는 박물관과 역사가 살아 숨 쉬는 도시.', img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80' },
+        'ISTP': { city: '뉴질랜드 퀸스타운', desc: '번지점프와 스카이다이빙! 모험과 스릴을 즐기는 당신을 위한 곳.', img: 'https://images.unsplash.com/photo-1589802829985-817e51171b92?auto=format&fit=crop&w=800&q=80' },
+        'ISFP': { city: '인도네시아 발리', desc: '아름다운 자연과 예술이 공존하는 곳에서 자유로운 영혼을 달래보세요.', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80' },
+        'INFP': { city: '스위스 인터라켄', desc: '동화 속 풍경 같은 알프스 산맥. 몽상가인 당신에게 영감을 줍니다.', img: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=80' },
+        'INTP': { city: '이집트 카이로', desc: '고대 문명의 미스터리를 탐구하고 분석할 수 있는 흥미로운 여행지.', img: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=800&q=80' },
+        'ESTP': { city: '미국 라스베이거스', desc: '화려한 불빛과 끊임없는 액티비티! 지루할 틈이 없는 도시.', img: 'https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?auto=format&fit=crop&w=800&q=80' },
+        'ESFP': { city: '스페인 이비자', desc: '열정적인 파티와 아름다운 해변. 순간을 즐기는 당신에게 딱!', img: 'https://images.unsplash.com/photo-1563789031959-4c02bcb41319?auto=format&fit=crop&w=800&q=80' },
+        'ENFP': { city: '스페인 바르셀로나', desc: '가우디의 독창적인 건축과 활기찬 거리가 당신의 상상력을 자극합니다.', img: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=80' },
+        'ENTP': { city: '미국 샌프란시스코', desc: '혁신과 다양성이 공존하는 실리콘밸리. 새로운 아이디어가 넘치는 곳.', img: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=80' },
+        'ESTJ': { city: '싱가포르', desc: '깨끗하고 체계적인 도시 시스템. 효율성을 중시하는 당신에게 안성맞춤.', img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=800&q=80' },
+        'ESFJ': { city: '프랑스 파리', desc: '사랑하는 사람들과 함께하기 좋은 낭만과 사교의 도시.', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80' },
+        'ENFJ': { city: '이탈리아 피렌체', desc: '예술과 인류애가 넘치는 르네상스의 본고장. 따뜻한 감성의 도시.', img: 'https://images.unsplash.com/photo-1543429776-2772752263bd?auto=format&fit=crop&w=800&q=80' },
+        'ENTJ': { city: '미국 뉴욕', desc: '세계 경제의 중심. 야망과 성취를 중요시하는 당신을 위한 무대.', img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80' }
+    };
+
+    function recommendTravel() {
+        const input = document.getElementById('mbtiInput').value.toUpperCase().trim();
+        const resultDiv = document.getElementById('result');
+        const img = document.getElementById('destImage');
+        const name = document.getElementById('destName');
+        const desc = document.getElementById('destDesc');
+
+        if (mbtiData[input]) {
+            const data = mbtiData[input];
+            img.src = data.img;
+            name.textContent = data.city;
+            desc.textContent = data.desc;
+            resultDiv.style.display = 'block';
+        } else {
+            alert("올바른 MBTI 4글자를 입력해주세요! (예: INFP)");
+            resultDiv.style.display = 'none';
+        }
+    }
+
+    // 엔터키 입력 시 동작
+    document.getElementById('mbtiInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            recommendTravel();
+        }
+    });
+</script>
+
+</body>
+</html>
